@@ -95,15 +95,21 @@ export interface AppState {
   pubertyTanner: string;
   pubertyBreastTestis: string;
   pubertyAcne: boolean;
-  pubertyPubicHair: boolean;
-  // Yếu cơ
+  pubertyBodyOdor: boolean;
+  pubertyGoiter: boolean;
+  pubertyCafeAuLait: boolean;
+  pubertyB: string;
+  pubertyP: string;
+  pubertySPL: string;
+  pubertyTestisLeft: string;
+  pubertyTestisRight: string;
+
+  // Yếu cơ (Giữ lại type nhưng sẽ bỏ UI)
   muscleStrength: string;
   muscleGait: string;
   muscleGowers: boolean;
   // Lùn trẻ gái
-  turnerSigns: boolean;
-  turnerLymphedema: boolean;
-  turnerBreast: string;
+  turnerSpecialNotes: string;
 
   // Dậy thì (Thông số cũ - giữ lại để tương thích)
   tannerFemaleBreast: string;
@@ -128,6 +134,11 @@ export interface AppState {
   labTestsOther1: string;
   labTestsOther2: string;
   labTestsOther3: string;
+  labTestsOther4: string;
+  labTestsOther5: string;
+  labTestsOther6: string;
+  labTestsOther7: string;
+  labTestsOther8: string;
   imaging: string[];
   genetics: string[];
 
@@ -256,15 +267,20 @@ export const initialState: AppState = {
   pubertyTanner: '',
   pubertyBreastTestis: '',
   pubertyAcne: false,
-  pubertyPubicHair: false,
+  pubertyBodyOdor: false,
+  pubertyGoiter: false,
+  pubertyCafeAuLait: false,
+  pubertyB: '',
+  pubertyP: '',
+  pubertySPL: '',
+  pubertyTestisLeft: '',
+  pubertyTestisRight: '',
   // Yếu cơ
   muscleStrength: '',
   muscleGait: '',
   muscleGowers: false,
   // Lùn trẻ gái
-  turnerSigns: false,
-  turnerLymphedema: false,
-  turnerBreast: '',
+  turnerSpecialNotes: '',
 
   tannerFemaleBreast: '',
   tannerFemalePubic: '',
@@ -283,6 +299,11 @@ export const initialState: AppState = {
   labTestsOther1: '',
   labTestsOther2: '',
   labTestsOther3: '',
+  labTestsOther4: '',
+  labTestsOther5: '',
+  labTestsOther6: '',
+  labTestsOther7: '',
+  labTestsOther8: '',
   imaging: [],
   genetics: [],
   suspectedDiagnosis: '',

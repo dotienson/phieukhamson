@@ -76,23 +76,6 @@ export const SPECIALIZED_EXAM_TEMPLATES: Record<string, string> = {
 - ăn chung:       ăn hàng:     fastfood:            
 - mang cơm trưa:          ăn rau/hoa quả:`,
 
-  "Khám sơ sinh": `* KHÁM SƠ SINH:
-- Trẻ sơ sinh Bú tốt  Khóc rõ tiếng  Không rõ mùi đặc biệt 
-- Thóp phẳng   Không co giật  tại lúc khám  
-- Trương lực cơ: không giảm/tăng  phản xạ sơ sinh: tốt
-- Tự thở, môi hồng Không tím  Lồng ngực cân đối  
-- Phổi thông khí đều, không ran   Không rút lõm lồng ngực 
-- Không thở nhanh liên tục          Tần số thở: 
-- Tim nhịp đều, T1  T2 rõ   Chi ấm Tiếng thổi:
-- Bụng mềm  Gan không to
-- Không khối vùng cùng cụt
-- Phân, tiểu: Bình thường
-- Da niêm mạc    Vàng da: 
-- BPSD ngoài: 
-- Thoát vị rốn: 
-- Bớt bất thường nổi trội: 
-- Dị hình bất thường nổi trội:`,
-
   "Khám tăng trưởng": `* KHÁM TĂNG TRƯỞNG:
 - Gia đình đưa trẻ đến khám vì: 
 - Theo dõi tăng trưởng:
@@ -106,37 +89,25 @@ export const SPECIALIZED_EXAM_TEMPLATES: Record<string, string> = {
 - Không đau đầu, buồn nôn, nhìn mờ bất thường;
 - Tiền sử dùng corticoid kéo dài / chấn thương sọ não nặng: Không;`,
 
-  "Khám dậy thì": `* KHÁM DẬY THÌ:
-- Khám kiểm tra về dậy thì, dấu hiệu: vú phì đại  - từ
+  "Khám dậy thì nữ": `* Khám kiểm tra về dậy thì:
 - Đau đầu: 
 - Cao nhanh: 
 - Tăng cân: 
+- Bướu cổ:
+- Mảng cà phê sữa:
 - Mụn trứng cá, mùi cơ thể: 
 - Tốc độ tăng chiều cao: 
-- Tuổi hiện tại:`,
+- Tanner: `,
 
-  "Khám yếu cơ trẻ nhỏ": `* KHÁM YẾU CƠ TRẺ NHỎ:
-- Thời điểm khởi phát:
-- Tiền sản và chu sinh:
-+ Phơi nhiễm thuốc/chất:
-+ Đa ối:
-+ Bệnh của mẹ (đái đường, nhược cơ, loạn trương lực cơ):
-+ Hôn nhân cận huyết:              Tuổi bố mẹ:
-+ Tiền sử gia đình (yếu liệt, tàn phế, chậm trí tuệ):
-+ Cuộc đẻ:
-- Sau sinh:
-+ Bú mút nuốt:         + Tiếng khóc:        + Tím tái:
-- Thăm khám:
-+ Dị hình:                    Vòng đầu:    
-+ Đầu nhỏ:   Sụp mi:    Suy kiệt:      + Sắc tố da, tóc: 
-+ Chuyển động mắt:               + Cử động mặt:      Cơ mặt miệng:
-+ Rung giật cơ:                       + Lưỡi rung:            Vòng tím quanh môi:
-+ Gan:                                   
-+ NP Barlow:                + NP Ortolani:
-+ Phản xạ trương lực cổ không đối xứng (< 2 tháng): 
-+ Teo cơ:       
-+ Hô hấp nghịch đảo:           + Lồng ngực hình chuông:
-+ Vòng khẩu cái cao:`,
+  "Khám dậy thì nam": `* Khám kiểm tra về dậy thì:
+- Đau đầu: 
+- Cao nhanh: 
+- Tăng cân: 
+- Bướu cổ:
+- Mảng cà phê sữa:
+- Mụn trứng cá, mùi cơ thể: 
+- Tốc độ tăng chiều cao: 
+- Tanner: `,
 
   "Khám lùn trẻ gái": `* KHÁM LÙN TRẺ GÁI:
 - Tuổi:
@@ -153,8 +124,6 @@ export const SPECIALIZED_EXAM_TEMPLATES: Record<string, string> = {
 - Cẳng tay cong ngoài: 
 - Nếp quạt ở mắt:
 - Thiểu sản móng:
-- Ngực rộng, núm vú xa nhau:
-- Phù mu bàn chân/tay:
 - Thị lực:
 - Sắc tố da:`
 };

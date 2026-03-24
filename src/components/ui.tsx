@@ -7,15 +7,15 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 
 export const Input: React.FC<InputProps> = ({ label, suffix, className = '', ...props }) => {
   return (
-    <div className={`flex flex-col gap-0.5 ${className}`}>
-      {label && <label className="text-[11px] font-bold text-blue-900 uppercase tracking-tight">{label}</label>}
+    <div className={`flex flex-col gap-1.5 ${className}`}>
+      {label && <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">{label}</label>}
       <div className="relative flex items-center">
         <input
-          className={`w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 placeholder-slate-300 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50 disabled:text-slate-400 transition-all ${suffix ? 'pr-10' : ''}`}
+          className={`w-full rounded-2xl border-2 border-slate-100 bg-slate-50/50 px-4 py-3 text-sm text-slate-700 placeholder-slate-400 shadow-sm focus:border-pink-300 focus:bg-white focus:outline-none focus:ring-4 focus:ring-pink-100/50 disabled:bg-slate-100 disabled:text-slate-400 transition-all ${suffix ? 'pr-12' : ''}`}
           {...props}
         />
         {suffix && (
-          <span className="absolute right-2 text-[11px] font-bold text-blue-400">{suffix}</span>
+          <span className="absolute right-4 text-xs font-bold text-slate-400">{suffix}</span>
         )}
       </div>
     </div>
@@ -28,10 +28,10 @@ interface TextAreaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
 
 export const TextArea: React.FC<TextAreaProps> = ({ label, className = '', ...props }) => {
   return (
-    <div className={`flex flex-col gap-0.5 ${className}`}>
-      {label && <label className="text-[11px] font-bold text-blue-900 uppercase tracking-tight">{label}</label>}
+    <div className={`flex flex-col gap-1.5 ${className}`}>
+      {label && <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">{label}</label>}
       <textarea
-        className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-700 placeholder-slate-300 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50 disabled:text-slate-400 min-h-[60px] resize-y transition-all"
+        className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50/50 px-4 py-3 text-sm text-slate-700 placeholder-slate-400 shadow-sm focus:border-pink-300 focus:bg-white focus:outline-none focus:ring-4 focus:ring-pink-100/50 disabled:bg-slate-100 disabled:text-slate-400 min-h-[80px] resize-y transition-all"
         {...props}
       />
     </div>
@@ -44,13 +44,13 @@ interface CheckboxProps extends React.InputHTMLAttributes<HTMLInputElement> {
 
 export const Checkbox: React.FC<CheckboxProps> = ({ label, className = '', ...props }) => {
   return (
-    <label className={`flex items-center gap-1.5 cursor-pointer group ${className}`}>
+    <label className={`flex items-center gap-3 cursor-pointer group ${className}`}>
       <input
         type="checkbox"
-        className="h-3.5 w-3.5 rounded border-slate-300 bg-white text-blue-900 focus:ring-blue-500 focus:ring-offset-0 transition-all"
+        className="h-5 w-5 rounded-md border-2 border-slate-200 bg-white text-pink-500 focus:ring-pink-400 focus:ring-offset-0 transition-all"
         {...props}
       />
-      <span className="text-[11px] font-medium text-slate-600 group-hover:text-blue-900 transition-colors">{label}</span>
+      <span className="text-sm font-semibold text-slate-600 group-hover:text-pink-600 transition-colors">{label}</span>
     </label>
   );
 };
@@ -61,13 +61,13 @@ interface RadioProps extends React.InputHTMLAttributes<HTMLInputElement> {
 
 export const Radio: React.FC<RadioProps> = ({ label, className = '', ...props }) => {
   return (
-    <label className={`flex items-center gap-1.5 cursor-pointer group ${className}`}>
+    <label className={`flex items-center gap-3 cursor-pointer group ${className}`}>
       <input
         type="radio"
-        className="h-3.5 w-3.5 border-slate-300 bg-white text-blue-900 focus:ring-blue-500 focus:ring-offset-0 transition-all"
+        className="h-5 w-5 border-2 border-slate-200 bg-white text-pink-500 focus:ring-pink-400 focus:ring-offset-0 transition-all"
         {...props}
       />
-      <span className="text-[11px] font-medium text-slate-600 group-hover:text-blue-900 transition-colors">{label}</span>
+      <span className="text-sm font-semibold text-slate-600 group-hover:text-pink-600 transition-colors">{label}</span>
     </label>
   );
 };
@@ -80,12 +80,12 @@ interface SectionProps {
 
 export const Section: React.FC<SectionProps> = ({ title, icon, children }) => {
   return (
-    <div className="mb-3 rounded-2xl bg-white p-3 shadow-sm border border-slate-100">
-      <div className="mb-2 flex items-center gap-2 border-b border-slate-100 pb-1.5">
-        {icon && <div className="text-blue-900">{icon}</div>}
-        <h2 className="text-[11px] font-black text-blue-900 uppercase tracking-[0.2em]">{title}</h2>
+    <div className="mb-6 rounded-[2rem] bg-white/90 backdrop-blur-xl p-6 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border-2 border-white">
+      <div className="mb-6 flex items-center gap-3">
+        {icon && <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-pink-100 to-purple-100 text-purple-600 shadow-inner">{icon}</div>}
+        <h2 className="text-lg font-black text-slate-700 tracking-wide">{title}</h2>
       </div>
-      <div className="space-y-3">
+      <div className="space-y-5">
         {children}
       </div>
     </div>
@@ -99,10 +99,10 @@ interface SelectProps extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>
 
 export const Select: React.FC<SelectProps> = ({ label, options, className = '', ...props }) => {
   return (
-    <div className={`flex flex-col gap-0.5 ${className}`}>
-      {label && <label className="text-[11px] font-bold text-blue-900 uppercase tracking-tight">{label}</label>}
+    <div className={`flex flex-col gap-1.5 ${className}`}>
+      {label && <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">{label}</label>}
       <select
-        className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50 disabled:text-slate-400 transition-all"
+        className="w-full rounded-2xl border-2 border-slate-100 bg-slate-50/50 px-4 py-3 text-sm text-slate-700 shadow-sm focus:border-pink-300 focus:bg-white focus:outline-none focus:ring-4 focus:ring-pink-100/50 disabled:bg-slate-100 disabled:text-slate-400 transition-all"
         {...props}
       >
         {options.map((opt, idx) => {
