@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { ClipboardCopy, FileText, User, Activity, Stethoscope, Syringe, Check, X, Loader2, Beaker, Thermometer, Zap, Droplets, Bone, HeartPulse, Download } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ClipboardCopy, FileText, User, Activity, Stethoscope, Syringe, Check, X, Loader2, Beaker, Thermometer, Zap, Droplets, Bone, HeartPulse, Download, AlertCircle } from 'lucide-react';
 import { AppState, initialState, Gender } from './types';
 import { Input, Checkbox, Radio, Section, TextArea, Select } from './components/ui';
 import { generateReportVN, generateReportEN, GeneratedReport } from './utils/generateReport';
@@ -11,6 +11,23 @@ import {
   PRENATAL_SCREENING_NIPS_OPTS, HEEL_PRICK_SCREENING_OPTS,
   SPECIALIZED_EXAM_TEMPLATES
 } from './constants';
+
+const CONSTRAINTS: Record<string, { min: number, max: number, name: string }> = {
+  dobDay: { min: 1, max: 31, name: 'Ngày sinh' },
+  dobMonth: { min: 1, max: 12, name: 'Tháng sinh' },
+  dobYear: { min: 1900, max: 2026, name: 'Năm sinh' },
+  gestationalWeeks: { min: 20, max: 42, name: 'Tuổi thai' },
+  birthWeight: { min: 0.5, max: 10, name: 'Cân nặng sơ sinh' },
+  birthOrder: { min: 1, max: 15, name: 'Con lần thứ' },
+  height: { min: 30, max: 200, name: 'Chiều cao' },
+  weight: { min: 1, max: 150, name: 'Cân nặng' },
+  pubertyB: { min: 1, max: 5, name: 'Giai đoạn B' },
+  pubertyP: { min: 1, max: 5, name: 'Giai đoạn P' },
+  pubertySPL: { min: 1, max: 15, name: 'Chiều dài dương vật (SPL)' },
+  pubertyTestisLeft: { min: 1, max: 30, name: 'Thể tích tinh hoàn trái' },
+  pubertyTestisRight: { min: 1, max: 30, name: 'Thể tích tinh hoàn phải' },
+  pubertyTanner: { min: 1, max: 5, name: 'Giai đoạn Tanner' },
+};
 
 export default function App() {
   const [state, setState] = useState<AppState>(initialState);
@@ -27,6 +44,16 @@ export default function App() {
   const [isLocked, setIsLocked] = useState(true);
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    toastTimeoutRef.current = setTimeout(() => {
+      setToastMessage(null);
+    }, 3000);
+  };
 
   const handleUnlock = (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,6 +78,21 @@ export default function App() {
   };
 
   const updateState = (key: keyof AppState, value: any) => {
+    if (typeof value === 'string' && value !== '') {
+      const numValue = parseFloat(value);
+      const constraint = CONSTRAINTS[key as string];
+      if (!isNaN(numValue) && constraint) {
+        if (numValue > constraint.max) {
+          showToast(`Cảnh báo: "${constraint.name}" tối đa là ${constraint.max}!`);
+          return;
+        }
+        if (numValue < constraint.min) {
+          showToast(`Cảnh báo: "${constraint.name}" tối thiểu là ${constraint.min}!`);
+          // Không return ở đây để user có thể gõ tiếp (VD: gõ '1' để thành '15')
+        }
+      }
+    }
+
     setState(prev => {
       let newValue = value;
 
@@ -80,11 +122,26 @@ export default function App() {
   const toggleArrayItem = (key: keyof AppState, item: string) => {
     setState(prev => {
       const arr = prev[key] as string[];
+      let newArr = [...arr];
+      
       if (arr.includes(item)) {
-        return { ...prev, [key]: arr.filter(i => i !== item) };
+        newArr = newArr.filter(i => i !== item);
+        // Automatic uncheck logic
+        if (key === 'labTests') {
+          if (item === 'GH tĩnh') newArr = newArr.filter(i => i !== 'GH động');
+          if (item === 'GH động') newArr = newArr.filter(i => i !== 'GH tĩnh');
+          if (item === 'Canxi toàn phần') newArr = newArr.filter(i => i !== 'Canxi ion hóa');
+        }
       } else {
-        return { ...prev, [key]: [...arr, item] };
+        newArr.push(item);
+        // Automatic check logic
+        if (key === 'labTests') {
+          if (item === 'GH tĩnh' && !newArr.includes('GH động')) newArr.push('GH động');
+          if (item === 'GH động' && !newArr.includes('GH tĩnh')) newArr.push('GH tĩnh');
+          if (item === 'Canxi toàn phần' && !newArr.includes('Canxi ion hóa')) newArr.push('Canxi ion hóa');
+        }
       }
+      return { ...prev, [key]: newArr };
     });
   };
 
@@ -93,6 +150,21 @@ export default function App() {
       setError("Vui lòng nhập mã PID trước khi tạo phiếu khám.");
       return;
     }
+
+    // Validate constraints before generating
+    for (const [key, constraint] of Object.entries(CONSTRAINTS)) {
+      const val = state[key as keyof AppState];
+      if (val !== '' && val !== undefined && val !== null) {
+        const numVal = parseFloat(val as string);
+        if (!isNaN(numVal)) {
+          if (numVal < constraint.min || numVal > constraint.max) {
+            setError(`Vui lòng kiểm tra lại: "${constraint.name}" phải nằm trong khoảng từ ${constraint.min} đến ${constraint.max}.`);
+            return;
+          }
+        }
+      }
+    }
+
     setError(null);
     const vnReport = generateReportVN(state);
     const enReport = generateReportEN(state);
@@ -221,9 +293,8 @@ export default function App() {
               <Zap className="h-8 w-8" />
             </div>
           </div>
-          <h1 className="text-2xl font-black text-slate-800 mb-1.5 tracking-tight">EndoClinic Dr.Sunny Son</h1>
-          <p className="text-sm font-bold text-slate-400 mb-5 tracking-wide">ESPE Clinical Fellow '25</p>
-          <p className="text-slate-500 text-base mb-6 font-medium italic">Vừng ơi mở cửa ra!</p>
+          <h1 className="text-2xl font-black text-slate-800 mb-1.5 tracking-tight">Dr.Sunny Son</h1>
+          <p className="text-sm font-bold text-slate-400 mb-8 tracking-wide">ESPE Clinical Fellow '25</p>
           
           <form onSubmit={handleUnlock} className="space-y-4">
             <div className="relative">
@@ -244,8 +315,6 @@ export default function App() {
               Bắt đầu thăm khám
             </button>
           </form>
-          
-          <p className="mt-8 text-[11px] text-slate-400 font-bold uppercase tracking-[0.2em]">© 2026 BS. Đỗ Tiến Sơn</p>
         </div>
       </div>
     );
@@ -253,6 +322,12 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-50 via-sky-50 to-teal-50 py-8 px-4 sm:px-6 lg:px-8 font-sans selection:bg-pink-200 selection:text-pink-900">
+      {toastMessage && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] bg-red-500 text-white px-6 py-3 rounded-2xl shadow-2xl font-bold flex items-center gap-3 animate-in fade-in slide-in-from-top-4">
+          <AlertCircle className="h-5 w-5" />
+          {toastMessage}
+        </div>
+      )}
       <div className="mx-auto max-w-4xl">
         <div className="mb-10 text-center">
           <div className="inline-block mb-3 rounded-full bg-white px-4 py-1.5 shadow-sm border border-slate-100">
@@ -271,15 +346,15 @@ export default function App() {
               <Input label="PID *" value={state.pid} onChange={e => updateState('pid', e.target.value)} />
               
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Giới tính</label>
-                <div className="flex items-center gap-6 mt-1 bg-slate-50/50 p-3 rounded-2xl border-2 border-slate-100">
+                <label className="text-[13px] font-semibold text-slate-500 uppercase tracking-wider ml-1">Giới tính</label>
+                <div className="flex items-center gap-6 mt-1 bg-slate-50/50 p-3 rounded-xl border-2 border-slate-100">
                   <Radio label="Nam" name="gender" checked={state.gender === 'Nam'} onChange={() => updateState('gender', 'Nam')} />
                   <Radio label="Nữ" name="gender" checked={state.gender === 'Nữ'} onChange={() => updateState('gender', 'Nữ')} />
                 </div>
               </div>
               
               <div>
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1 block mb-1.5">Ngày sinh (DD/MM/YYYY)</label>
+                <label className="text-[13px] font-semibold text-slate-500 uppercase tracking-wider ml-1 block mb-1.5">Ngày sinh (DD/MM/YYYY)</label>
                 <div className="flex gap-3">
                   <Input placeholder="DD" type="number" min="1" max="31" value={state.dobDay} onChange={e => updateState('dobDay', e.target.value)} className="w-20" />
                   <Input placeholder="MM" type="number" min="1" max="12" value={state.dobMonth} onChange={e => updateState('dobMonth', e.target.value)} className="w-20" />
@@ -296,8 +371,8 @@ export default function App() {
               <div className="space-y-6">
                 <TextArea label="Lý do đến khám" value={state.reason} onChange={e => updateState('reason', e.target.value)} placeholder="Nhập lý do chi tiết..." />
                 
-                <div className="bg-slate-50/50 p-5 rounded-2xl border-2 border-slate-100 space-y-4">
-                  <h4 className="text-sm font-black text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                <div className="bg-slate-50/50 p-5 rounded-xl border-2 border-slate-100 space-y-4">
+                  <h4 className="text-[13px] font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-pink-400"></span> Tiền sử & Thói quen
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -313,8 +388,8 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="bg-slate-50/50 p-5 rounded-2xl border-2 border-slate-100 space-y-4">
-                  <h4 className="text-sm font-black text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                <div className="bg-slate-50/50 p-5 rounded-xl border-2 border-slate-100 space-y-4">
+                  <h4 className="text-[13px] font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-sky-400"></span> Sản khoa & Sơ sinh
                   </h4>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -330,7 +405,7 @@ export default function App() {
                   
                   <div className="space-y-3 pt-2">
                     <div className="flex items-center justify-between mb-2">
-                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Thai kì của mẹ</label>
+                      <label className="text-[13px] font-semibold text-slate-500 uppercase tracking-wider">Thai kì của mẹ</label>
                       <Checkbox label="Không bất thường" checked={state.maternalHistoryNormal} onChange={e => updateState('maternalHistoryNormal', e.target.checked)} />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -343,7 +418,7 @@ export default function App() {
 
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between mb-1.5">
-                        <label className="text-[11px] font-black text-blue-900 uppercase">Siêu âm thai</label>
+                        <label className="text-[13px] font-semibold text-slate-500 uppercase tracking-wider">Siêu âm thai</label>
                         <Checkbox label="Không bất thường" checked={state.prenatalUltrasoundNormal} onChange={e => updateState('prenatalUltrasoundNormal', e.target.checked)} />
                       </div>
                       <div className="grid grid-cols-2 gap-1.5">
@@ -356,11 +431,11 @@ export default function App() {
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
                         <div className="flex items-center justify-between mb-1">
-                          <label className="text-[11px] font-black text-blue-900 uppercase">Sàng lọc NIPS</label>
-                          <Checkbox label="NA" checked={state.prenatalScreeningNIPSUnknown} onChange={e => updateState('prenatalScreeningNIPSUnknown', e.target.checked)} />
+                          <label className="text-[13px] font-semibold text-slate-500 uppercase tracking-wider">Sàng lọc NIPS</label>
+                          <Checkbox label="Chưa rõ thông tin" checked={state.prenatalScreeningNIPSUnknown} onChange={e => updateState('prenatalScreeningNIPSUnknown', e.target.checked)} />
                         </div>
                         <select 
-                          className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 focus:border-blue-500 outline-none disabled:opacity-50"
+                          className="w-full rounded-xl border-2 border-slate-100 bg-slate-50/50 px-3.5 py-2.5 text-base text-slate-700 focus:border-pink-300 focus:bg-white outline-none disabled:opacity-50 transition-all"
                           value={state.prenatalScreeningNIPS}
                           onChange={e => updateState('prenatalScreeningNIPS', e.target.value)}
                           disabled={state.prenatalScreeningNIPSUnknown}
@@ -371,11 +446,11 @@ export default function App() {
                       </div>
                       <div className="space-y-1">
                         <div className="flex items-center justify-between mb-1">
-                          <label className="text-[11px] font-black text-blue-900 uppercase">Máu gót chân</label>
-                          <Checkbox label="NA" checked={state.heelPrickScreeningUnknown} onChange={e => updateState('heelPrickScreeningUnknown', e.target.checked)} />
+                          <label className="text-[13px] font-semibold text-slate-500 uppercase tracking-wider">Máu gót chân</label>
+                          <Checkbox label="Chưa rõ thông tin" checked={state.heelPrickScreeningUnknown} onChange={e => updateState('heelPrickScreeningUnknown', e.target.checked)} />
                         </div>
                         <select 
-                          className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-700 focus:border-blue-500 outline-none disabled:opacity-50"
+                          className="w-full rounded-xl border-2 border-slate-100 bg-slate-50/50 px-3.5 py-2.5 text-base text-slate-700 focus:border-pink-300 focus:bg-white outline-none disabled:opacity-50 transition-all"
                           value={state.heelPrickScreening}
                           onChange={e => updateState('heelPrickScreening', e.target.value)}
                           disabled={state.heelPrickScreeningUnknown}
@@ -388,11 +463,11 @@ export default function App() {
 
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between mb-1.5">
-                        <label className="text-[11px] font-black text-blue-900 uppercase">Sơ sinh</label>
+                        <label className="text-[13px] font-semibold text-slate-500 uppercase tracking-wider">Sơ sinh</label>
                         <Checkbox label="Không bất thường" checked={state.neonatalHistoryNormal} onChange={e => updateState('neonatalHistoryNormal', e.target.checked)} />
                       </div>
                       <div className="grid grid-cols-2 gap-1.5">
-                        {NEONATAL_HISTORY_OPTS.map(opt => (
+                        {NEONATAL_HISTORY_OPTS.filter(opt => state.gender === 'Nữ' ? !['Dương vật nhỏ', 'Tinh hoàn ẩn'].includes(opt) : true).map(opt => (
                           <Checkbox key={opt} label={opt} checked={state.neonatalHistory.includes(opt)} onChange={() => toggleArrayItem('neonatalHistory', opt)} disabled={state.neonatalHistoryNormal} />
                         ))}
                       </div>
@@ -415,7 +490,7 @@ export default function App() {
                 </div>
 
                 {state.specializedExamType === 'Khám béo phì' && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 bg-pink-50/30 p-5 rounded-2xl border-2 border-pink-100">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 bg-pink-50/30 p-5 rounded-xl border-2 border-pink-100">
                     <Checkbox label="Béo toàn thân" checked={state.obesityWholeBody} onChange={e => updateState('obesityWholeBody', e.target.checked)} />
                     <Checkbox label="Vẻ mặt Cushing" checked={state.obesityCushing} onChange={e => updateState('obesityCushing', e.target.checked)} />
                     <Checkbox label="Dấu hiệu gai đen" checked={state.obesityAcanthosis} onChange={e => updateState('obesityAcanthosis', e.target.checked)} />
@@ -443,7 +518,7 @@ export default function App() {
                 )}
 
                 {state.specializedExamType === 'Khám tăng trưởng' && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-emerald-50/30 p-5 rounded-2xl border-2 border-emerald-100">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-emerald-50/30 p-5 rounded-xl border-2 border-emerald-100">
                     <Input label="Tỉ lệ thân mình" value={state.growthProportions} onChange={e => updateState('growthProportions', e.target.value)} />
                     <Input label="Tình trạng dậy thì" value={state.growthPuberty} onChange={e => updateState('growthPuberty', e.target.value)} />
                     <Checkbox label="Dị hình bất thường" checked={state.growthDysmorphism} onChange={e => updateState('growthDysmorphism', e.target.checked)} />
@@ -451,7 +526,7 @@ export default function App() {
                 )}
 
                 {state.specializedExamType === 'Khám dậy thì nữ' && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 bg-violet-50/30 p-5 rounded-2xl border-2 border-violet-100">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 bg-violet-50/30 p-5 rounded-xl border-2 border-violet-100">
                     <div className="flex gap-2">
                       <Input label="B" type="number" min="1" max="3" value={state.pubertyB} onChange={e => updateState('pubertyB', e.target.value)} />
                       <Input label="P" type="number" min="1" max="3" value={state.pubertyP} onChange={e => updateState('pubertyP', e.target.value)} />
@@ -465,7 +540,7 @@ export default function App() {
                 )}
 
                 {state.specializedExamType === 'Khám dậy thì nam' && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 bg-blue-50/30 p-5 rounded-2xl border-2 border-blue-100">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 bg-blue-50/30 p-5 rounded-xl border-2 border-blue-100">
                     <Input label="SPL" suffix="cm" type="number" step="0.1" min="0" max="15" value={state.pubertySPL} onChange={e => updateState('pubertySPL', e.target.value)} />
                     <div className="flex gap-2">
                       <Input label="Tinh hoàn trái" suffix="mL" type="number" min="1" max="25" value={state.pubertyTestisLeft} onChange={e => updateState('pubertyTestisLeft', e.target.value)} />
@@ -480,29 +555,20 @@ export default function App() {
                 )}
 
                 {state.specializedExamType === 'Khám lùn trẻ gái' && (
-                  <div className="bg-rose-50/30 p-5 rounded-2xl border-2 border-rose-100">
+                  <div className="bg-rose-50/30 p-5 rounded-xl border-2 border-rose-100">
                     <TextArea label="Ghi nhận đặc biệt" value={state.turnerSpecialNotes} onChange={e => updateState('turnerSpecialNotes', e.target.value)} placeholder="Nhập các ghi nhận đặc biệt cho trẻ Turner..." />
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-slate-50/50 p-5 rounded-2xl border-2 border-slate-100">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-slate-50/50 p-5 rounded-xl border-2 border-slate-100">
                   <Input label="Chiều cao" suffix="cm" type="number" step="0.1" min="30" max="200" value={state.height} onChange={e => updateState('height', e.target.value)} />
                   <Input label="Z-score H" type="number" step="0.01" min="-10" max="10" value={state.heightZ} onChange={e => updateState('heightZ', e.target.value)} />
                   <Input label="Cân nặng" suffix="kg" type="number" step="0.1" min="1" max="120" value={state.weight} onChange={e => updateState('weight', e.target.value)} />
                   <Input label="Z-score W" type="number" step="0.01" min="-10" max="10" value={state.weightZ} onChange={e => updateState('weightZ', e.target.value)} />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6">
                   <TextArea label="Khám Nội tiết" value={state.physicalExam} onChange={e => updateState('physicalExam', e.target.value)} rows={10} placeholder="Nhập kết quả khám nội tiết chi tiết..." />
-                  
-                  <div className="bg-slate-50/50 p-5 rounded-2xl border-2 border-slate-100 space-y-4">
-                    <h4 className="text-sm font-black text-slate-700 uppercase tracking-wider flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-violet-400"></span> Tư vấn tăng trưởng
-                    </h4>
-                    <div className="space-y-3">
-                      <Input label="Tốc độ tăng cao" suffix="cm/năm" type="number" step="0.1" value={state.growthVelocity} onChange={e => updateState('growthVelocity', e.target.value)} />
-                    </div>
-                  </div>
                 </div>
 
                 <TextArea
@@ -518,45 +584,59 @@ export default function App() {
           <Section title="Cận lâm sàng" icon={<Syringe className="h-5 w-5" />}>
             <div className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div className="space-y-3 bg-slate-50/50 p-5 rounded-2xl border-2 border-slate-100">
+                <div className="space-y-3 bg-slate-50/50 p-5 rounded-xl border-2 border-slate-100">
                   <div className="flex items-center gap-2 border-b-2 border-slate-100 pb-2 mb-3">
                     <Beaker className="h-4 w-4 text-pink-500" />
-                    <h4 className="text-sm font-black text-slate-700 uppercase tracking-wider">Xét nghiệm máu & nước tiểu</h4>
+                    <h4 className="text-[13px] font-bold text-slate-700 uppercase tracking-wider">Xét nghiệm máu (1)</h4>
                   </div>
                   <div className="grid grid-cols-1 gap-2">
-                    {LAB_TESTS_GROUPED.flatMap(g => g.tests).map(test => (
+                    {LAB_TESTS_GROUPED.slice(0, 2).flatMap(g => g.tests).map(test => (
+                      <Checkbox key={test} label={test} checked={state.labTests.includes(test)} onChange={() => toggleArrayItem('labTests', test)} />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-3 bg-slate-50/50 p-5 rounded-xl border-2 border-slate-100">
+                  <div className="flex items-center gap-2 border-b-2 border-slate-100 pb-2 mb-3">
+                    <Beaker className="h-4 w-4 text-pink-500" />
+                    <h4 className="text-[13px] font-bold text-slate-700 uppercase tracking-wider">Xét nghiệm máu (2)</h4>
+                  </div>
+                  <div className="grid grid-cols-1 gap-2">
+                    {LAB_TESTS_GROUPED.slice(2).flatMap(g => g.tests).map(test => (
                       <Checkbox key={test} label={test} checked={state.labTests.includes(test)} onChange={() => toggleArrayItem('labTests', test)} />
                     ))}
                   </div>
                 </div>
                 
-                <div className="space-y-3 bg-slate-50/50 p-5 rounded-2xl border-2 border-slate-100">
-                  <div className="flex items-center gap-2 border-b-2 border-slate-100 pb-2 mb-3">
-                    <FileText className="h-4 w-4 text-sky-500" />
-                    <h4 className="text-sm font-black text-slate-700 uppercase tracking-wider">Chẩn đoán hình ảnh</h4>
+                <div className="flex flex-col gap-6">
+                  <div className="space-y-3 bg-slate-50/50 p-5 rounded-xl border-2 border-slate-100">
+                    <div className="flex items-center gap-2 border-b-2 border-slate-100 pb-2 mb-3">
+                      <FileText className="h-4 w-4 text-sky-500" />
+                      <h4 className="text-[13px] font-bold text-slate-700 uppercase tracking-wider">Chẩn đoán hình ảnh</h4>
+                    </div>
+                    <div className="grid grid-cols-1 gap-2">
+                      {IMAGING.filter(img => state.gender === 'Nữ' ? img !== 'Siêu âm Tinh hoàn' : true).map(img => (
+                        <Checkbox key={img} label={img} checked={state.imaging.includes(img)} onChange={() => toggleArrayItem('imaging', img)} />
+                      ))}
+                    </div>
                   </div>
-                  <div className="grid grid-cols-1 gap-2">
-                    {IMAGING.map(img => (
-                      <Checkbox key={img} label={img} checked={state.imaging.includes(img)} onChange={() => toggleArrayItem('imaging', img)} />
-                    ))}
-                  </div>
-                </div>
 
-                <div className="space-y-3 bg-slate-50/50 p-5 rounded-2xl border-2 border-slate-100">
-                  <div className="flex items-center gap-2 border-b-2 border-slate-100 pb-2 mb-3">
-                    <Activity className="h-4 w-4 text-emerald-500" />
-                    <h4 className="text-sm font-black text-slate-700 uppercase tracking-wider">Di truyền</h4>
-                  </div>
-                  <div className="grid grid-cols-1 gap-2">
-                    {GENETICS.map(gen => (
-                      <Checkbox key={gen} label={gen} checked={state.genetics.includes(gen)} onChange={() => toggleArrayItem('genetics', gen)} />
-                    ))}
+                  <div className="space-y-3 bg-slate-50/50 p-5 rounded-xl border-2 border-slate-100">
+                    <div className="flex items-center gap-2 border-b-2 border-slate-100 pb-2 mb-3">
+                      <Activity className="h-4 w-4 text-emerald-500" />
+                      <h4 className="text-[13px] font-bold text-slate-700 uppercase tracking-wider">Di truyền</h4>
+                    </div>
+                    <div className="grid grid-cols-1 gap-2">
+                      {GENETICS.map(gen => (
+                        <Checkbox key={gen} label={gen} checked={state.genetics.includes(gen)} onChange={() => toggleArrayItem('genetics', gen)} />
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-3 bg-slate-50/50 p-5 rounded-2xl border-2 border-slate-100">
-                <label className="text-sm font-black text-slate-700 uppercase tracking-wider flex items-center gap-2 mb-3">
+              <div className="space-y-3 bg-slate-50/50 p-5 rounded-xl border-2 border-slate-100">
+                <label className="text-[13px] font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2 mb-3">
                   <span className="w-2 h-2 rounded-full bg-amber-400"></span> Xét nghiệm khác
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

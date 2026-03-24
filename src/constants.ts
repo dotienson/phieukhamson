@@ -4,7 +4,8 @@ export const LAB_TESTS_GROUPED = [
     tests: [
       "Công thức máu", "Máu lắng (ESR)", "Điện giải đồ", "Glucose máu (Đói)",
       "AST", "ALT", "Ure", "Creatinin", "Protein", "Albumin",
-      "Cholesterol TP", "Triglyceride", "LDL-C", "Acid Uric", "HbA1c", "Insulin máu (Đói)", "C-peptid"
+      "Cholesterol TP", "Triglyceride", "LDL-C", "Acid Uric", "HbA1c", "Insulin máu (Đói)", "C-peptid",
+      "Men cơ (CK)", "Vitamin B12"
     ]
   },
   {
@@ -13,7 +14,7 @@ export const LAB_TESTS_GROUPED = [
   },
   {
     category: "Tăng trưởng & Tuyến yên",
-    tests: ["IGF-1", "GH (Nghiệm pháp)", "Prolactin", "Cortisol (Máu 8:00 AM)", "ACTH (Máu 8:00 AM)"]
+    tests: ["IGF-1", "GH tĩnh", "GH động", "Prolactin", "Cortisol (Máu 8:00 AM)", "ACTH (Máu 8:00 AM)"]
   },
   {
     category: "Dậy thì & Sinh dục",
@@ -25,7 +26,7 @@ export const LAB_TESTS_GROUPED = [
   },
   {
     category: "Xương & Khoáng chất",
-    tests: ["Canxi (Toàn phần / Ion hóa)", "Phospho", "ALP (Phosphatase kiềm)", "Vitamin D", "PTH", "Ferritin", "Kẽm"]
+    tests: ["Canxi toàn phần", "Canxi ion hóa", "Phospho", "ALP (Phosphatase kiềm)", "Vitamin D", "PTH", "Ferritin", "Kẽm"]
   }
 ];
 

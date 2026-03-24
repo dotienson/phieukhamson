@@ -48,7 +48,6 @@ export interface AppState {
   weightZ: string;
   bmi: string;
   bmiZ: string;
-  growthVelocity: string;
   growthEvaluation: string;
 
   // Khám Toàn thân & Bộ phận
@@ -201,7 +200,6 @@ export const initialState: AppState = {
   weightZ: '',
   bmi: '',
   bmiZ: '',
-  growthVelocity: '',
   growthEvaluation: '',
   specializedExamType: '',
   physicalExam: `- Trẻ tỉnh; tương tác tốt; 
